@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Juz' Amma Surah Wheel Challenge</title>
+
+  <!-- Google Fonts: Amiri Quran for authentic Uthmani script, Fredoka & Nunito for kid-friendly UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root {
+      --font-display: 'Fredoka', sans-serif;
+      --font-body: 'Nunito', sans-serif;
+      --font-quran: 'Amiri Quran', 'Amiri', serif;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: radial-gradient(circle at top left, #e0f7fa 0%, #f3e8ff 48%, #fef3c7 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    h1, h2, h3, .font-display {
+      font-family: var(--font-display);
+    }
+
+    .quran-verse {
+      font-family: var(--font-quran);
+      direction: rtl;
+      unicode-bidi: isolate;
+      line-height: 2.35;
+      letter-spacing: 0;
+    }
+
+    .quran-name-ar {
+      font-family: var(--font-quran);
+      direction: rtl;
+      line-height: 1.8;
+    }
+
+    /* Decorative subtle Islamic geometric stars in background */
+    .bg-pattern {
+      background-image: radial-gradient(rgba(13, 148, 136, 0.12) 2px, transparent 2px),
+                        radial-gradient(rgba(168, 85, 247, 0.1) 2px, transparent 2px);
+      background-size: 44px 44px;
+      background-position: 0 0, 22px 22px;
+    }
+
+    /* Wheel outer glow and bounce animation */
+    .wheel-frame {
+      box-shadow:
+        0 18px 40px -10px rgba(15, 118, 110, 0.32),
+        0 0 0 10px #ffffff,
+        0 0 0 16px #f59e0b,
+        0 24px 50px rgba(0, 0, 0, 0.18);
+    }
+
+    /* Pointer bounce when slices pass */
+    @keyframes pointerTick {
+      0% { transform: translateX(-50%) rotate(0deg); }
+      40% { transform: translateX(-50%) rotate(-18deg); }
+      100% { transform: translateX(-50%) rotate(0deg); }
+    }
+    .pointer-tick {
+      animation: pointerTick 0.14s ease-out;
+    }
+
+    /* Modal pop-in animation */
+    @keyframes modalPop {
+      0% { opacity: 0; transform: scale(0.86) translateY(18px); }
+      70% { opacity: 1; transform: scale(1.02) translateY(-2px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .animate-modal-pop {
+      animation: modalPop 0.36s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Floating sparkles */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(6deg); }
+    }
+    .animate-float {
+      animation: floatSlow 4s ease-in-out infinite;
+    }
+
+    /* Tactile 3D button press effect */
+    .btn-3d {
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
+    }
+    .btn-3d:hover:not(:disabled) {
+      transform: translateY(-2px);
+      filter: brightness(1.04);
+    }
+    .btn-3d:active:not(:disabled) {
+      transform: translateY(3px);
+    }
+
+    /* Custom scrollbar for long verses on small screens */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(13, 148, 136, 0.4);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-pattern text-slate-800 flex flex-col justify-between">
+
+  <!-- Confetti Canvas Overlay -->
+  <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+  <!-- Top Header & Controls -->
+  <header class="w-full max-w-6xl mx-auto px-4 pt-4 pb-2 flex flex-col md:flex-row items-center justify-between gap-3 z-10">
+    <!-- Brand / Title -->
+    <div class="flex items-center gap-3 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-3xl shadow-md border-2 border-teal-100">
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-600 flex items-center justify-center text-white shadow-inner shrink-0">
+        <!-- 8-Point Islamic Star SVG -->
+        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 1L14.8 6.2L20.5 5.5L18.8 11L23 15L17.5 17.2L17.8 23L12.5 20.2L7.2 23L7.5 17.2L2 15L6.2 11L4.5 5.5L10.2 6.2L12 1Z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-teal-800 leading-tight tracking-wide">
+          Juz' Amma Wheel
+        </h1>
+        <p class="text-xs sm:text-sm font-semibold text-purple-600">
+          Surah Order & Last Ayah Challenge
+        </p>
+      </div>
+    </div>
+
+    <!-- Progress Tracker & Action Controls -->
+    <div class="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+      <!-- Progress Pill -->
+      <div class="bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-md border-2 border-amber-200 flex items-center gap-3">
+        <div class="flex flex-col">
+          <div class="flex items-center justify-between gap-3 text-xs sm:text-sm font-extrabold text-slate-700">
+            <span class="text-amber-600 uppercase tracking-wider">Completed</span>
+            <span id="progress-text" class="text-teal-700 text-base">0 / 37</span>
+          </div>
+          <div class="w-32 sm:w-40 h-2.5 bg-slate-100 rounded-full overflow-hidden mt-1 border border-slate-200">
+            <div id="progress-bar" class="h-full bg-gradient-to-r from-teal-400 via-emerald-500 to-amber-400 transition-all duration-500 rounded-full" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sound Toggle Button -->
+      <button id="sound-toggle-btn" type="button" aria-label="Toggle Sound Effects"
+        class="btn-3d bg-white/95 hover:bg-purple-50 text-purple-700 border-2 border-purple-200 p-3 rounded-2xl shadow-md flex items-center gap-1.5 font-bold text-sm cursor-pointer">
+        <span id="sound-icon-on">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>
+          </svg>
+        </span>
+        <span id="sound-icon-off" class="hidden text-slate-400">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>
+          </svg>
+        </span>
+        <span id="sound-label" class="hidden sm:inline">Sound On</span>
+      </button>
+
+      <!-- Restart Wheel Button -->
+      <button id="restart-btn" type="button"
+        class="btn-3d bg-rose-500 hover:bg-rose-600 text-white border-b-4 border-rose-700 px-4 py-2.5 rounded-2xl shadow-md font-bold text-sm flex items-center gap-1.5 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <span>Restart Wheel</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Game Stage -->
+  <main class="flex-1 w-full max-w-6xl mx-auto px-4 py-3 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12">
+
+    <!-- Left/Center: Interactive Wheel Container -->
+    <div class="relative flex flex-col items-center justify-center">
+      <!-- Top Pointer / Clapper -->
+      <div id="wheel-pointer" class="absolute -top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none drop-shadow-lg">
+        <svg class="w-12 h-14 text-rose-500" viewBox="0 0 48 56" fill="none">
+          <path d="M24 54L6 18C6 8.05887 14.0589 0 24 0C33.9411 0 42 8.05887 42 18L24 54Z" fill="currentColor" stroke="#FFFFFF" stroke-width="3.5"/>
+          <circle cx="24" cy="17" r="6.5" fill="#FDE047"/>
+        </svg>
+      </div>
+
+      <!-- Responsive Wheel Wrapper -->
+      <div id="wheel-wrapper" class="relative w-[310px] h-[310px] sm:w-[410px] sm:h-[410px] md:w-[460px] md:h-[460px] rounded-full wheel-frame bg-white flex items-center justify-center">
+        <canvas id="wheel-canvas" class="w-full h-full rounded-full block"></canvas>
+
+        <!-- Center Spin Hub Button -->
+        <button id="center-spin-btn" type="button" aria-label="Spin the Wheel"
+          class="btn-3d absolute w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-b from-amber-300 via-amber-400 to-orange-500 border-4 border-white shadow-xl flex flex-col items-center justify-center text-white font-display font-bold tracking-wide cursor-pointer z-10 hover:scale-105 active:scale-95">
+          <span class="text-base sm:text-lg drop-shadow">SPIN</span>
+          <span class="text-[10px] sm:text-xs font-extrabold uppercase tracking-widest text-amber-950/80">Tap!</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right / Bottom: Kid-Friendly Instructions & Big Spin CTA -->
+    <div class="w-full max-w-md flex flex-col items-center lg:items-start text-center lg:text-left gap-4">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-5 sm:p-6 shadow-lg border-2 border-purple-100 w-full">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-100 text-teal-800 text-xs font-extrabold uppercase tracking-wider mb-2">
+          <span>How to Play</span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">
+          Test Your Juz' Amma Mastery!
+        </h2>
+        <p class="text-slate-600 text-sm sm:text-base font-semibold leading-relaxed mb-4">
+          Spin the mystery wheel to reveal the <span class="text-teal-700 font-extrabold">last Ayah</span> of a Surah from Juz' Amma. Can you name the Surah and tell which Surah comes right after it?
+        </p>
+
+        <!-- Step badges -->
+        <div class="grid grid-cols-3 gap-2 text-xs font-bold text-slate-700 mb-5">
+          <div class="bg-amber-50 border border-amber-200 rounded-2xl p-2.5 flex flex-col items-center text-center">
+            <span class="text-lg mb-0.5">🎡</span>
+            <span>1. Spin Wheel</span>
+          </div>
+          <div class="bg-teal-50 border border-teal-200 rounded-2xl p-2.5 flex flex-col items-center text-center">
+            <span class="text-lg mb-0.5">📖</span>
+            <span>2. Read Ayah</span>
+          </div>
+          <div class="bg-purple-50 border border-purple-200 rounded-2xl p-2.5 flex flex-col items-center text-center">
+            <span class="text-lg mb-0.5">⭐</span>
+            <span>3. Name Next</span>
+          </div>
+        </div>
+
+        <!-- Primary Spin Button -->
+        <button id="main-spin-btn" type="button"
+          class="btn-3d w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 hover:from-teal-600 hover:to-emerald-600 text-white font-display font-bold text-xl sm:text-2xl tracking-wide shadow-lg border-b-4 border-teal-800 flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          <span>Spin the Wheel!</span>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </button>
+
+        <p id="remaining-status" class="text-center text-xs font-bold text-slate-500 mt-3">
+          37 mystery Surahs remaining on the wheel
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full text-center py-3 px-4 text-xs font-bold text-slate-500">
+    Juz' Amma Interactive Learning Wheel • Progress saves automatically on this device
+  </footer>
+
+  <!-- =========================================================
+       MODAL 1: QUESTION & ANSWER PROMPT CARD
+       ========================================================= -->
+  <div id="question-modal" class="fixed inset-0 z-40 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="animate-modal-pop bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl border-4 border-amber-300 overflow-hidden max-h-[92vh] flex flex-col">
+
+      <!-- Modal Top Banner -->
+      <div class="bg-gradient-to-r from-teal-500 via-emerald-500 to-purple-600 px-6 py-4 flex items-center justify-between text-white">
+        <div class="flex items-center gap-2.5">
+          <span class="bg-white/25 px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold tracking-wider uppercase">
+            Mystery Slice #<span id="modal-slice-number">1</span>
+          </span>
+          <span class="text-xs sm:text-sm font-bold text-amber-200">
+            Final Ayah Clue
+          </span>
+        </div>
+        <span class="text-xl">✨</span>
+      </div>
+
+      <!-- Modal Scrollable Content -->
+      <div class="p-5 sm:p-7 overflow-y-auto flex-1 flex flex-col items-center text-center">
+
+        <!-- Ornamental Quranic Verse Box -->
+        <div class="w-full bg-gradient-to-b from-amber-50/90 to-orange-50/60 border-2 border-amber-300 rounded-3xl p-5 sm:p-7 mb-5 shadow-inner relative">
+          <div class="text-xs font-extrabold uppercase tracking-widest text-amber-700/80 mb-2">
+            Last Ayah of the Surah
+          </div>
+          <p id="modal-ayah-text" lang="ar" dir="rtl"
+             class="quran-verse text-2xl sm:text-3xl md:text-4xl text-slate-900 font-normal px-2">
+            ﴿إِنَّا أَنذَرْنَاكُمْ عَذَابًا قَرِيبًا﴾
+          </p>
+        </div>
+
+        <!-- Question Prompt in English -->
+        <div class="bg-purple-50 border-2 border-purple-200 rounded-2xl px-5 py-3.5 mb-5 w-full">
+          <p class="text-lg sm:text-xl font-extrabold text-purple-900 leading-snug">
+            What is the name of this Surah, and which Surah comes right after it?
+          </p>
+        </div>
+
+        <!-- Step 1: Show Answer Button -->
+        <div id="reveal-btn-container" class="w-full">
+          <button id="show-answer-btn" type="button"
+            class="btn-3d w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-display font-bold text-xl shadow-lg border-b-4 border-orange-700 cursor-pointer">
+            Show Answer
+          </button>
+        </div>
+
+        <!-- Step 2: Revealed Answer + Evaluation Buttons (Hidden initially) -->
+        <div id="answer-section" class="hidden w-full flex-col gap-4 mt-1">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-left">
+            <!-- Current Surah Card -->
+            <div class="bg-teal-50 border-2 border-teal-300 rounded-2xl p-4 shadow-sm">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-teal-700 block mb-1">
+                This Surah is:
+              </span>
+              <div class="flex items-baseline justify-between gap-2 flex-wrap">
+                <span id="answer-surah-en" class="text-xl sm:text-2xl font-display font-bold text-slate-900">
+                  An-Naba
+                </span>
+                <span id="answer-surah-ar" lang="ar" dir="rtl" class="quran-name-ar text-2xl sm:text-3xl text-teal-800 font-bold">
+                  النبأ
+                </span>
+              </div>
+              <span id="answer-surah-meta" class="text-xs font-bold text-teal-700/80 mt-1 block">
+                Surah #1 in Juz' Amma • 40 Ayat
+              </span>
+            </div>
+
+            <!-- Next Surah Card -->
+            <div class="bg-purple-50 border-2 border-purple-300 rounded-2xl p-4 shadow-sm">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-purple-700 block mb-1">
+                Surah Right After It:
+              </span>
+              <div class="flex items-baseline justify-between gap-2 flex-wrap">
+                <span id="answer-next-en" class="text-xl sm:text-2xl font-display font-bold text-slate-900">
+                  An-Nazi'at
+                </span>
+                <span id="answer-next-ar" lang="ar" dir="rtl" class="quran-name-ar text-2xl sm:text-3xl text-purple-800 font-bold">
+                  النازعات
+                </span>
+              </div>
+              <span id="answer-next-meta" class="text-xs font-bold text-purple-700/80 mt-1 block">
+                Next in Mushaf order
+              </span>
+            </div>
+          </div>
+
+          <!-- Self-Check Action Buttons -->
+          <div class="pt-2">
+            <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2.5">
+              Did the student get both right?
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button id="correct-btn" type="button"
+                class="btn-3d py-3.5 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-display font-bold text-lg sm:text-xl shadow-md border-b-4 border-emerald-700 flex items-center justify-center gap-2 cursor-pointer">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span>Correct</span>
+              </button>
+
+              <button id="wrong-btn" type="button"
+                class="btn-3d py-3.5 px-5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-display font-bold text-lg sm:text-xl shadow-md border-b-4 border-orange-700 flex items-center justify-center gap-2 cursor-pointer">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9"/>
+                </svg>
+                <span>Wrong / Try Again</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 2: CUSTOM RESTART CONFIRMATION MODAL
+       ========================================================= -->
+  <div id="restart-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="animate-modal-pop bg-white w-full max-w-md rounded-3xl shadow-2xl border-4 border-rose-200 p-6 text-center">
+      <div class="w-16 h-16 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4 text-3xl">
+        🔄
+      </div>
+      <h3 class="text-2xl font-display font-bold text-slate-800 mb-2">
+        Restart the Wheel?
+      </h3>
+      <p class="text-slate-600 font-semibold text-sm sm:text-base mb-6">
+        This will clear your current progress and put all 37 Surahs back onto the spinning wheel. Are you sure?
+      </p>
+      <div class="grid grid-cols-2 gap-3">
+        <button id="cancel-restart-btn" type="button"
+          class="btn-3d py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-base border-b-4 border-slate-300 cursor-pointer">
+          Keep Playing
+        </button>
+        <button id="confirm-restart-btn" type="button"
+          class="btn-3d py-3 px-4 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-base border-b-4 border-rose-700 cursor-pointer">
+          Yes, Restart
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 3: ALL 37 SURAHS COMPLETED VICTORY SCREEN
+       ========================================================= -->
+  <div id="victory-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm">
+    <div class="animate-modal-pop bg-white w-full max-w-lg rounded-[2rem] shadow-2xl border-4 border-amber-400 p-7 text-center relative overflow-hidden">
+      <div class="text-5xl sm:text-6xl mb-3 animate-float">🏆</div>
+      <span class="inline-block px-4 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold uppercase tracking-wider mb-2">
+        Masha'Allah! 37 / 37 Completed
+      </span>
+      <h2 class="text-3xl sm:text-4xl font-display font-bold text-teal-800 mb-3">
+        Juz' Amma Champion!
+      </h2>
+      <p class="text-slate-600 font-semibold text-base mb-6 leading-relaxed">
+        Amazing job! You identified every single Surah in Juz' Amma from its final Ayah and mastered their exact order!
+      </p>
+      <button id="play-again-btn" type="button"
+        class="btn-3d w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-display font-bold text-xl shadow-lg border-b-4 border-teal-800 cursor-pointer">
+        Play Again from Beginning
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * Complete Dataset: All 37 Surahs of Juz' Amma in exact Mushaf order (78 to 114).
+     * Each entry stores its index (1-37), English transliteration, Arabic name,
+     * Ayah count, exact last Ayah text, and the following Surah.
+     */
+    const JUZ_AMMA_SURAHS = [
+      {
+        id: 1,
+        en: "An-Naba",
+        ar: "النبأ",
+        ayahCount: 40,
+        lastAyah: "﴿إِنَّا أَنذَرْنَاكُمْ عَذَابًا قَرِيبًا يَوْمَ يَنظُرُ الْمَرْءُ مَا قَدَّمَتْ يَدَاهُ وَيَقُولُ الْكَافِرُ يَا لَيْتَنِي كُنتُ تُرَابًا﴾",
+        nextEn: "An-Nazi'at",
+        nextAr: "النازعات"
+      },
+      {
+        id: 2,
+        en: "An-Nazi'at",
+        ar: "النازعات",
+        ayahCount: 46,
+        lastAyah: "﴿كَأَنَّهُمْ يَوْمَ يَرَوْنَهَا لَمْ يَلْبَثُوا إِلَّا عَشِيَّةً أَوْ ضُحَاهَا﴾",
+        nextEn: "'Abasa",
+        nextAr: "عبس"
+      },
+      {
+        id: 3,
+        en: "'Abasa",
+        ar: "عبس",
+        ayahCount: 42,
+        lastAyah: "﴿أُولَٰئِكَ هُمُ الْكَفَرَةُ الْفَجَرَةُ﴾",
+        nextEn: "At-Takwir",
+        nextAr: "التكوير"
+      },
+      {
+        id: 4,
+        en: "At-Takwir",
+        ar: "التكوير",
+        ayahCount: 29,
+        lastAyah: "﴿وَمَا تَشَاءُونَ إِلَّا أَن يَشَاءَ اللَّهُ رَبُّ الْعَالَمِينَ﴾",
+        nextEn: "Al-Infitar",
+        nextAr: "الانفطار"
+      },
+      {
+        id: 5,
+        en: "Al-Infitar",
+        ar: "الانفطار",
+        ayahCount: 19,
+        lastAyah: "﴿يَوْمَ لَا تَمْلِكُ نَفْسٌ لِّنَفْسٍ شَيْئًا ۖ وَالْأَمْرُ يَوْمَئِذٍ لِّلَّهِ﴾",
+        nextEn: "Al-Mutaffifin",
+        nextAr: "المطففين"
+      },
+      {
+        id: 6,
+        en: "Al-Mutaffifin",
+        ar: "المطففين",
+        ayahCount: 36,
+        lastAyah: "﴿هَلْ ثُوِّبَ الْكُفَّارُ مَا كَانُوا يَفْعَلُونَ﴾",
+        nextEn: "Al-Inshiqaq",
+        nextAr: "الانشقاق"
+      },
+      {
+        id: 7,
+        en: "Al-Inshiqaq",
+        ar: "الانشقاق",
+        ayahCount: 25,
+        lastAyah: "﴿إِلَّا الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ لَهُمْ أَجْرٌ غَيْرُ مَمْنُونٍ﴾",
+        nextEn: "Al-Buruj",
+        nextAr: "البروج"
+      },
+      {
+        id: 8,
+        en: "Al-Buruj",
+        ar: "البروج",
+        ayahCount: 22,
+        lastAyah: "﴿فِي لَوْحٍ مَّحْفُوظٍ﴾",
+        nextEn: "At-Tariq",
+        nextAr: "الطارق"
+      },
+      {
+        id: 9,
+        en: "At-Tariq",
+        ar: "الطارق",
+        ayahCount: 17,
+        lastAyah: "﴿فَمَهِّلِ الْكَافِرِينَ أَمْهِلْهُمْ رُوَيْدًا﴾",
+        nextEn: "Al-A'la",
+        nextAr: "الأعلى"
+      },
+      {
+        id: 10,
+        en: "Al-A'la",
+        ar: "الأعلى",
+        ayahCount: 19,
+        lastAyah: "﴿صُحُفِ إِبْرَاهِيمَ وَمُوسَىٰ﴾",
+        nextEn: "Al-Ghashiyah",
+        nextAr: "الغاشية"
+      },
+      {
+        id: 11,
+        en: "Al-Ghashiyah",
+        ar: "الغاشية",
+        ayahCount: 26,
+        lastAyah: "﴿ثُمَّ إِنَّ عَلَيْنَا حِسَابَهُم﴾",
+        nextEn: "Al-Fajr",
+        nextAr: "الفجر"
+      },
+      {
+        id: 12,
+        en: "Al-Fajr",
+        ar: "الفجر",
+        ayahCount: 30,
+        lastAyah: "﴿وَادْخُلِي جَنَّتِي﴾",
+        nextEn: "Al-Balad",
+        nextAr: "البلد"
+      },
+      {
+        id: 13,
+        en: "Al-Balad",
+        ar: "البلد",
+        ayahCount: 20,
+        lastAyah: "﴿عَلَيْهِمْ نَارٌ مُّؤْصَدَةٌ﴾",
+        nextEn: "Ash-Shams",
+        nextAr: "الشمس"
+      },
+      {
+        id: 14,
+        en: "Ash-Shams",
+        ar: "الشمس",
+        ayahCount: 15,
+        lastAyah: "﴿وَلَا يَخَافُ عُقْبَاهَا﴾",
+        nextEn: "Al-Layl",
+        nextAr: "الليل"
+      },
+      {
+        id: 15,
+        en: "Al-Layl",
+        ar: "الليل",
+        ayahCount: 21,
+        lastAyah: "﴿وَلَسَوْفَ يَرْضَىٰ﴾",
+        nextEn: "Ad-Duha",
+        nextAr: "الضحى"
+      },
+      {
+        id: 16,
+        en: "Ad-Duha",
+        ar: "الضحى",
+        ayahCount: 11,
+        lastAyah: "﴿وَأَمَّا بِنِعْمَةِ رَبِّكَ فَحَدِّثْ﴾",
+        nextEn: "Ash-Sharh",
+        nextAr: "الشرح"
+      },
+      {
+        id: 17,
+        en: "Ash-Sharh",
+        ar: "الشرح",
+        ayahCount: 8,
+        lastAyah: "﴿وَإِلَىٰ رَبِّكَ فَارْغَب﴾",
+        nextEn: "At-Tin",
+        nextAr: "التين"
+      },
+      {
+        id: 18,
+        en: "At-Tin",
+        ar: "التين",
+        ayahCount: 8,
+        lastAyah: "﴿أَلَيْسَ اللَّهُ بِأَحْكَمِ الْحَاكِمِينَ﴾",
+        nextEn: "Al-'Alaq",
+        nextAr: "العلق"
+      },
+      {
+        id: 19,
+        en: "Al-'Alaq",
+        ar: "العلق",
+        ayahCount: 19,
+        lastAyah: "﴿كَلَّا لَا تُطِعْهُ وَاسْجُدْ وَاقْتَرِب﴾",
+        nextEn: "Al-Qadr",
+        nextAr: "القدر"
+      },
+      {
+        id: 20,
+        en: "Al-Qadr",
+        ar: "القدر",
+        ayahCount: 5,
+        lastAyah: "﴿سَلَامٌ هِيَ حَتَّىٰ مَطْلَعِ الْفَجْرِ﴾",
+        nextEn: "Al-Bayyinah",
+        nextAr: "البينة"
+      },
+      {
+        id: 21,
+        en: "Al-Bayyinah",
+        ar: "البينة",
+        ayahCount: 8,
+        lastAyah: "﴿جَزَاؤُهُمْ عِندَ رَبِّهِمْ جَنَّاتُ عَدْنٍ تَجْرِي مِن تَحْتِهَا الْأَنْهَارُ خَالِدِينَ فِيهَا أَبَدًا ۖ رَّضِيَ اللَّهُ عَنْهُمْ وَرَضُوا عَنْهُ ۚ ذَٰلِكَ لِمَنْ خَشِيَ رَبَّهُ﴾",
+        nextEn: "Az-Zalzalah",
+        nextAr: "الزلزلة"
+      },
+      {
+        id: 22,
+        en: "Az-Zalzalah",
+        ar: "الزلزلة",
+        ayahCount: 8,
+        lastAyah: "﴿وَمَن يَعْمَلْ مِثْقَالَ ذَرَّةٍ شَرًّا يَرَهُ﴾",
+        nextEn: "Al-'Adiyat",
+        nextAr: "العاديات"
+      },
+      {
+        id: 23,
+        en: "Al-'Adiyat",
+        ar: "العاديات",
+        ayahCount: 11,
+        lastAyah: "﴿إِنَّ رَبَّهُم بِهِمْ يَوْمَئِذٍ لَّخَبِيرٌ﴾",
+        nextEn: "Al-Qari'ah",
+        nextAr: "القارعة"
+      },
+      {
+        id: 24,
+        en: "Al-Qari'ah",
+        ar: "القارعة",
+        ayahCount: 11,
+        lastAyah: "﴿نَارٌ حَامِيَةٌ﴾",
+        nextEn: "At-Takathur",
+        nextAr: "التكاثر"
+      },
+      {
+        id: 25,
+        en: "At-Takathur",
+        ar: "التكاثر",
+        ayahCount: 8,
+        lastAyah: "﴿ثُمَّ لَتُسْأَلُنَّ يَوْمَئِذٍ عَنِ النَّعِيمِ﴾",
+        nextEn: "Al-'Asr",
+        nextAr: "العصر"
+      },
+      {
+        id: 26,
+        en: "Al-'Asr",
+        ar: "العصر",
+        ayahCount: 3,
+        lastAyah: "﴿إِلَّا الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ وَتَوَاصَوْا بِالْحَقِّ وَتَوَاصَوْا بِالصَّبْرِ﴾",
+        nextEn: "Al-Humazah",
+        nextAr: "الهمزة"
+      },
+      {
+        id: 27,
+        en: "Al-Humazah",
+        ar: "الهمزة",
+        ayahCount: 9,
+        lastAyah: "﴿فِي عَمَدٍ مُّمَدَّدَةٍ﴾",
+        nextEn: "Al-Fil",
+        nextAr: "الفيل"
+      },
+      {
+        id: 28,
+        en: "Al-Fil",
+        ar: "الفيل",
+        ayahCount: 5,
+        lastAyah: "﴿فَجَعَلَهُمْ كَعَصْفٍ مَّأْكُولٍ﴾",
+        nextEn: "Quraysh",
+        nextAr: "قريش"
+      },
+      {
+        id: 29,
+        en: "Quraysh",
+        ar: "قريش",
+        ayahCount: 4,
+        lastAyah: "﴿الَّذِي أَطْعَمَهُم مِّن جُوعٍ وَآمَنَهُم مِّنْ خَوْفٍ﴾",
+        nextEn: "Al-Ma'un",
+        nextAr: "الماعون"
+      },
+      {
+        id: 30,
+        en: "Al-Ma'un",
+        ar: "الماعون",
+        ayahCount: 7,
+        lastAyah: "﴿وَيَمْنَعُونَ الْمَاعُونَ﴾",
+        nextEn: "Al-Kawthar",
+        nextAr: "الكوثر"
+      },
+      {
+        id: 31,
+        en: "Al-Kawthar",
+        ar: "الكوثر",
+        ayahCount: 3,
+        lastAyah: "﴿إِنَّ شَانِئَكَ هُوَ الْأَبْتَرُ﴾",
+        nextEn: "Al-Kafirun",
+        nextAr: "الكافرون"
+      },
+      {
+        id: 32,
+        en: "Al-Kafirun",
+        ar: "الكافرون",
+        ayahCount: 6,
+        lastAyah: "﴿لَكُمْ دِينُكُمْ وَلِيَ دِينِ﴾",
+        nextEn: "An-Nasr",
+        nextAr: "النصر"
+      },
+      {
+        id: 33,
+        en: "An-Nasr",
+        ar: "النصر",
+        ayahCount: 3,
+        lastAyah: "﴿فَسَبِّحْ بِحَمْدِ رَبِّكَ وَاسْتَغْفِرْهُ ۚ إِنَّهُ كَانَ تَوَّابًا﴾",
+        nextEn: "Al-Masad",
+        nextAr: "المسد"
+      },
+      {
+        id: 34,
+        en: "Al-Masad",
+        ar: "المسد",
+        ayahCount: 5,
+        lastAyah: "﴿فِي جِيدِهَا حَبْلٌ مِّن مَّسَدٍ﴾",
+        nextEn: "Al-Ikhlas",
+        nextAr: "الإخلاص"
+      },
+      {
+        id: 35,
+        en: "Al-Ikhlas",
+        ar: "الإخلاص",
+        ayahCount: 4,
+        lastAyah: "﴿وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ﴾",
+        nextEn: "Al-Falaq",
+        nextAr: "الفلق"
+      },
+      {
+        id: 36,
+        en: "Al-Falaq",
+        ar: "الفلق",
+        ayahCount: 5,
+        lastAyah: "﴿وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ﴾",
+        nextEn: "An-Nas",
+        nextAr: "الناس"
+      },
+      {
+        id: 37,
+        en: "An-Nas",
+        ar: "الناس",
+        ayahCount: 6,
+        lastAyah: "﴿مِنَ الْجِنَّةِ وَالنَّاسِ﴾",
+        nextEn: "End of Juz' Amma",
+        nextAr: "ختام القرآن"
+      }
+    ];
+
+    // Cheerful, high-contrast kid-friendly palette for the wheel slices
+    const SLICE_PALETTE = [
+      "#14b8a6", // Teal
+      "#f59e0b", // Warm Gold / Amber
+      "#8b5cf6", // Soft Vibrant Purple
+      "#ec4899", // Playful Pink
+      "#06b6d4", // Bright Cyan
+      "#10b981", // Emerald Green
+      "#f97316", // Cheerful Orange
+      "#6366f1"  // Indigo
+    ];
+
+    const STORAGE_KEY = "juz_amma_wheel_state_v1";
+
+    // Application State
+    let state = {
+      eliminatedIds: [], // Array of Surah IDs (1..37) already answered correctly
+      soundEnabled: true,
+      currentRotation: 0, // Current angle in radians
+      isSpinning: false,
+      selectedSurah: null,
+      selectedVisualSlot: null
+    };
+
+    // DOM Elements
+    const wheelCanvas = document.getElementById("wheel-canvas");
+    const wheelCtx = wheelCanvas.getContext("2d");
+    const wheelWrapper = document.getElementById("wheel-wrapper");
+    const wheelPointer = document.getElementById("wheel-pointer");
+    const centerSpinBtn = document.getElementById("center-spin-btn");
+    const mainSpinBtn = document.getElementById("main-spin-btn");
+    const progressText = document.getElementById("progress-text");
+    const progressBar = document.getElementById("progress-bar");
+    const remainingStatus = document.getElementById("remaining-status");
+
+    // Sound Toggle Elements
+    const soundToggleBtn = document.getElementById("sound-toggle-btn");
+    const soundIconOn = document.getElementById("sound-icon-on");
+    const soundIconOff = document.getElementById("sound-icon-off");
+    const soundLabel = document.getElementById("sound-label");
+
+    // Question Modal Elements
+    const questionModal = document.getElementById("question-modal");
+    const modalSliceNumber = document.getElementById("modal-slice-number");
+    const modalAyahText = document.getElementById("modal-ayah-text");
+    const revealBtnContainer = document.getElementById("reveal-btn-container");
+    const showAnswerBtn = document.getElementById("show-answer-btn");
+    const answerSection = document.getElementById("answer-section");
+    const answerSurahEn = document.getElementById("answer-surah-en");
+    const answerSurahAr = document.getElementById("answer-surah-ar");
+    const answerSurahMeta = document.getElementById("answer-surah-meta");
+    const answerNextEn = document.getElementById("answer-next-en");
+    const answerNextAr = document.getElementById("answer-next-ar");
+    const answerNextMeta = document.getElementById("answer-next-meta");
+    const correctBtn = document.getElementById("correct-btn");
+    const wrongBtn = document.getElementById("wrong-btn");
+
+    // Restart & Victory Modals
+    const restartBtn = document.getElementById("restart-btn");
+    const restartModal = document.getElementById("restart-modal");
+    const cancelRestartBtn = document.getElementById("cancel-restart-btn");
+    const confirmRestartBtn = document.getElementById("confirm-restart-btn");
+    const victoryModal = document.getElementById("victory-modal");
+    const playAgainBtn = document.getElementById("play-again-btn");
+
+    // =========================================================
+    // WEB AUDIO API SOUND SYNTHESIZER (No external audio needed)
+    // =========================================================
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // Crisp wooden/marimba tick when wheel passes a slice peg
+    function playTickSound() {
+      if (!state.soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(680, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(240, ctx.currentTime + 0.045);
+
+        gain.gain.setValueAtTime(0.16, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.045);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.05);
+      } catch (e) {
+        // Ignore audio errors on restricted devices
+      }
+    }
+
+    // Cheerful ascending chime when landing on a slice
+    function playLandingChime() {
+      if (!state.soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          const startTime = ctx.currentTime + idx * 0.08;
+          osc.frequency.setValueAtTime(freq, startTime);
+
+          gain.gain.setValueAtTime(0.001, startTime);
+          gain.gain.linearRampToValueAtTime(0.18, startTime + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.36);
+        });
+      } catch (e) {}
+    }
+
+    // Celebratory fanfare when student gets the answer right
+    function playCelebrationFanfare() {
+      if (!state.soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const melody = [
+          { freq: 523.25, time: 0.0, dur: 0.14 },  // C5
+          { freq: 659.25, time: 0.12, dur: 0.14 }, // E5
+          { freq: 783.99, time: 0.24, dur: 0.16 }, // G5
+          { freq: 1046.5, time: 0.38, dur: 0.45 }  // C6
+        ];
+
+        melody.forEach((n) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          const t = ctx.currentTime + n.time;
+          osc.frequency.setValueAtTime(n.freq, t);
+
+          gain.gain.setValueAtTime(0.001, t);
+          gain.gain.linearRampToValueAtTime(0.24, t + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + n.dur);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + n.dur + 0.02);
+        });
+      } catch (e) {}
+    }
+
+    // Gentle encouraging two-tone boop when trying again
+    function playTryAgainSound() {
+      if (!state.soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const notes = [392.0, 349.23]; // G4 -> F4
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          const t = ctx.currentTime + idx * 0.14;
+          osc.frequency.setValueAtTime(freq, t);
+
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.24);
+        });
+      } catch (e) {}
+    }
+
+    // =========================================================
+    // CONFETTI CELEBRATION ENGINE
+    // =========================================================
+    const confettiCanvas = document.getElementById("confetti-canvas");
+    const confettiCtx = confettiCanvas.getContext("2d");
+    let confettiParticles = [];
+    let confettiAnimId = null;
+
+    function resizeConfettiCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+
+    function launchConfetti(count = 95) {
+      resizeConfettiCanvas();
+      const colors = ["#14b8a6", "#f59e0b", "#8b5cf6", "#ec4899", "#10b981", "#3b82f6", "#facc15"];
+
+      for (let i = 0; i < count; i++) {
+        confettiParticles.push({
+          x: confettiCanvas.width * (0.2 + Math.random() * 0.6),
+          y: confettiCanvas.height * 0.45,
+          vx: (Math.random() - 0.5) * 16,
+          vy: -Math.random() * 14 - 4,
+          size: Math.random() * 9 + 5,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          vRot: (Math.random() - 0.5) * 14,
+          gravity: 0.36 + Math.random() * 0.15,
+          alpha: 1
+        });
+      }
+
+      if (!confettiAnimId) {
+        animateConfetti();
+      }
+    }
+
+    function animateConfetti() {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+      confettiParticles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+        p.vx *= 0.985;
+        p.rotation += p.vRot;
+        if (p.y > confettiCanvas.height * 0.85) {
+          p.alpha -= 0.03;
+        }
+
+        confettiCtx.save();
+        confettiCtx.globalAlpha = Math.max(0, p.alpha);
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate((p.rotation * Math.PI) / 180);
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.65);
+        confettiCtx.restore();
+      });
+
+      confettiParticles = confettiParticles.filter((p) => p.alpha > 0 && p.y < confettiCanvas.height + 40);
+
+      if (confettiParticles.length > 0) {
+        confettiAnimId = requestAnimationFrame(animateConfetti);
+      } else {
+        confettiAnimId = null;
+      }
+    }
+
+    // =========================================================
+    // PERSISTENCE (LOCAL STORAGE) & HELPERS
+    // =========================================================
+    function loadProgress() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed.eliminatedIds)) {
+            state.eliminatedIds = parsed.eliminatedIds.filter(
+              (id) => typeof id === "number" && id >= 1 && id <= 37
+            );
+          }
+          if (typeof parsed.soundEnabled === "boolean") {
+            state.soundEnabled = parsed.soundEnabled;
+          }
+        }
+      } catch (e) {
+        console.warn("Could not read progress from localStorage:", e);
+      }
+    }
+
+    function saveProgress() {
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            eliminatedIds: state.eliminatedIds,
+            soundEnabled: state.soundEnabled
+          })
+        );
+      } catch (e) {
+        console.warn("Could not save progress to localStorage:", e);
+      }
+    }
+
+    function getRemainingSurahs() {
+      return JUZ_AMMA_SURAHS.filter((s) => !state.eliminatedIds.includes(s.id));
+    }
+
+    // =========================================================
+    // WHEEL RENDERING (RESPONSIVE HIGH-DPI CANVAS)
+    // =========================================================
+    function resizeWheelCanvas() {
+      const rect = wheelWrapper.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      wheelCanvas.width = rect.width * dpr;
+      wheelCanvas.height = rect.height * dpr;
+      wheelCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawWheel();
+    }
+
+    function drawWheel() {
+      const rect = wheelWrapper.getBoundingClientRect();
+      const size = rect.width;
+      if (size <= 0) return;
+
+      const cx = size / 2;
+      const cy = size / 2;
+      const radius = size / 2 - 4;
+
+      wheelCtx.clearRect(0, 0, size, size);
+
+      const remaining = getRemainingSurahs();
+      const count = remaining.length;
+
+      // If all 37 are completed, draw a celebratory golden wheel
+      if (count === 0) {
+        const grad = wheelCtx.createRadialGradient(cx, cy, 10, cx, cy, radius);
+        grad.addColorStop(0, "#fef08a");
+        grad.addColorStop(1, "#14b8a6");
+        wheelCtx.beginPath();
+        wheelCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+        wheelCtx.fillStyle = grad;
+        wheelCtx.fill();
+        return;
+      }
+
+      const sliceAngle = (Math.PI * 2) / count;
+
+      for (let i = 0; i < count; i++) {
+        const startAngle = state.currentRotation + i * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+
+        // Avoid adjacent slices having identical colors even when count changes
+        let colorIndex = i % SLICE_PALETTE.length;
+        if (i === count - 1 && count > 1 && colorIndex === 0) {
+          colorIndex = 2;
+        }
+
+        // Draw Slice Wedge
+        wheelCtx.beginPath();
+        wheelCtx.moveTo(cx, cy);
+        wheelCtx.arc(cx, cy, radius, startAngle, endAngle);
+        wheelCtx.closePath();
+        wheelCtx.fillStyle = SLICE_PALETTE[colorIndex];
+        wheelCtx.fill();
+
+        // Crisp white divider lines
+        wheelCtx.lineWidth = count > 20 ? 1.8 : 2.5;
+        wheelCtx.strokeStyle = "rgba(255, 255, 255, 0.88)";
+        wheelCtx.stroke();
+
+        // Draw Mystery Number / Star Label along the slice radius
+        // IMPORTANT: Do NOT reveal Surah names or Mushaf order numbers on the slices
+        // so students genuinely identify the Surah from the last Ayah!
+        const midAngle = startAngle + sliceAngle / 2;
+        wheelCtx.save();
+        wheelCtx.translate(cx, cy);
+        wheelCtx.rotate(midAngle);
+
+        const textRadius = radius * 0.76;
+        const fontSize = count > 24 ? Math.max(12, size * 0.031) : Math.max(15, size * 0.042);
+
+        wheelCtx.font = `700 ${fontSize}px 'Fredoka', sans-serif`;
+        wheelCtx.fillStyle = "#ffffff";
+        wheelCtx.textAlign = "center";
+        wheelCtx.textBaseline = "middle";
+        wheelCtx.shadowColor = "rgba(0, 0, 0, 0.28)";
+        wheelCtx.shadowBlur = 3;
+
+        // Display mystery slice label ("?1", "?2", ... or star symbol when few slices remain)
+        const label = count > 10 ? `?${i + 1}` : `★ ?${i + 1}`;
+        wheelCtx.fillText(label, textRadius, 0);
+
+        // Decorative outer rim peg dot for tactile wheel feel
+        wheelCtx.beginPath();
+        wheelCtx.arc(radius - 9, 0, count > 25 ? 2.5 : 3.5, 0, Math.PI * 2);
+        wheelCtx.fillStyle = "#fde047";
+        wheelCtx.fill();
+
+        wheelCtx.restore();
+      }
+
+      // Inner decorative ring around the hub
+      wheelCtx.beginPath();
+      wheelCtx.arc(cx, cy, radius * 0.24, 0, Math.PI * 2);
+      wheelCtx.fillStyle = "rgba(255, 255, 255, 0.25)";
+      wheelCtx.fill();
+    }
+
+    // =========================================================
+    // SPINNING PHYSICS & SLICE DETECTION
+    // =========================================================
+    function triggerPointerTick() {
+      wheelPointer.classList.remove("pointer-tick");
+      // Force reflow so rapid ticks re-trigger animation
+      void wheelPointer.offsetWidth;
+      wheelPointer.classList.add("pointer-tick");
+      playTickSound();
+    }
+
+    function spinWheel() {
+      const remaining = getRemainingSurahs();
+      if (state.isSpinning || remaining.length === 0) return;
+
+      getAudioContext(); // Unlock audio on user gesture
+      state.isSpinning = true;
+      updateUIState();
+
+      const count = remaining.length;
+      const sliceAngle = (Math.PI * 2) / count;
+
+      // Pick a uniformly random winning slice index among remaining Surahs
+      const winningIndex = Math.floor(Math.random() * count);
+
+      // Pointer is located at top center: -Math.PI / 2 (or 1.5 * Math.PI)
+      // We want the center of winningIndex slice to align with -Math.PI / 2
+      const pointerAngle = -Math.PI / 2;
+      // Add slight natural jitter within the middle 60% of the slice
+      const jitter = (Math.random() - 0.5) * (sliceAngle * 0.55);
+      const targetSliceCenterOffset = winningIndex * sliceAngle + sliceAngle / 2 + jitter;
+
+      // Normalize current rotation into [0, 2*PI)
+      const twoPi = Math.PI * 2;
+      const currentNormalized = ((state.currentRotation % twoPi) + twoPi) % twoPi;
+
+      let desiredNormalized = (pointerAngle - targetSliceCenterOffset) % twoPi;
+      if (desiredNormalized < 0) desiredNormalized += twoPi;
+
+      let deltaAngle = desiredNormalized - currentNormalized;
+      if (deltaAngle <= 0) deltaAngle += twoPi;
+
+      // Spin 5 to 7 full revolutions for excitement
+      const extraSpins = (5 + Math.floor(Math.random() * 3)) * twoPi;
+      const totalRotationDelta = extraSpins + deltaAngle;
+
+      const startRotation = state.currentRotation;
+      const targetRotation = startRotation + totalRotationDelta;
+      const duration = 4200; // 4.2 seconds smooth deceleration
+      const startTime = performance.now();
+
+      let lastTickSlice = Math.floor(
+        (((pointerAngle - startRotation) % twoPi + twoPi) % twoPi) / sliceAngle
+      );
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+
+        // Quintic ease-out for super smooth, realistic wheel slowdown
+        const easeOut = 1 - Math.pow(1 - t, 4.2);
+        state.currentRotation = startRotation + totalRotationDelta * easeOut;
+
+        // Detect peg crossings for sound + clapper bounce
+        const relAngle = (((pointerAngle - state.currentRotation) % twoPi) + twoPi) % twoPi;
+        const currentSliceUnderPointer = Math.floor(relAngle / sliceAngle);
+        if (currentSliceUnderPointer !== lastTickSlice) {
+          lastTickSlice = currentSliceUnderPointer;
+          triggerPointerTick();
+        }
+
+        drawWheel();
+
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          state.currentRotation = targetRotation % twoPi;
+          drawWheel();
+          state.isSpinning = false;
+          updateUIState();
+
+          playLandingChime();
+          // Brief pause so the student sees where the pointer landed before card opens
+          setTimeout(() => {
+            openQuestionModal(remaining[winningIndex], winningIndex + 1);
+          }, 420);
+        }
+      }
+
+      requestAnimationFrame(step);
+    }
+
+    // =========================================================
+    // MODAL FLOW & GAME ACTIONS
+    // =========================================================
+    function openQuestionModal(surah, visualSliceNum) {
+      state.selectedSurah = surah;
+      state.selectedVisualSlot = visualSliceNum;
+
+      modalSliceNumber.textContent = visualSliceNum;
+      modalAyahText.textContent = surah.lastAyah;
+
+      // Reset reveal state
+      revealBtnContainer.classList.remove("hidden");
+      answerSection.classList.add("hidden");
+      answerSection.classList.remove("flex");
+
+      // Populate hidden answer fields
+      answerSurahEn.textContent = surah.en;
+      answerSurahAr.textContent = surah.ar;
+      answerSurahMeta.textContent = `Surah #${surah.id} of Juz' Amma • ${surah.ayahCount} Ayat`;
+
+      answerNextEn.textContent = surah.nextEn;
+      answerNextAr.textContent = surah.nextAr;
+      answerNextMeta.textContent =
+        surah.id === 37
+          ? "The very last Surah of the Holy Quran!"
+          : `Surah #${surah.id + 1} in Juz' Amma`;
+
+      questionModal.classList.remove("hidden");
+      questionModal.classList.add("flex");
+    }
+
+    function closeQuestionModal() {
+      questionModal.classList.add("hidden");
+      questionModal.classList.remove("flex");
+      state.selectedSurah = null;
+    }
+
+    // Reveal Answer handler
+    showAnswerBtn.addEventListener("click", () => {
+      revealBtnContainer.classList.add("hidden");
+      answerSection.classList.remove("hidden");
+      answerSection.classList.add("flex");
+    });
+
+    // Correct Answer -> Eliminate Surah, celebrate, update progress
+    correctBtn.addEventListener("click", () => {
+      if (!state.selectedSurah) return;
+
+      const surahId = state.selectedSurah.id;
+      if (!state.eliminatedIds.includes(surahId)) {
+        state.eliminatedIds.push(surahId);
+        saveProgress();
+      }
+
+      closeQuestionModal();
+      playCelebrationFanfare();
+      launchConfetti(90);
+      updateUIState();
+      drawWheel();
+
+      // Check if all 37 Surahs are completed
+      if (state.eliminatedIds.length === JUZ_AMMA_SURAHS.length) {
+        setTimeout(() => {
+          launchConfetti(160);
+          victoryModal.classList.remove("hidden");
+          victoryModal.classList.add("flex");
+        }, 650);
+      }
+    });
+
+    // Wrong / Try Again -> Keep Surah on wheel and close modal
+    wrongBtn.addEventListener("click", () => {
+      playTryAgainSound();
+      closeQuestionModal();
+    });
+
+    // =========================================================
+    // UI STATE & CONTROLS UPDATES
+    // =========================================================
+    function updateUIState() {
+      const completedCount = state.eliminatedIds.length;
+      const totalCount = JUZ_AMMA_SURAHS.length;
+      const remainingCount = totalCount - completedCount;
+
+      progressText.textContent = `${completedCount} / ${totalCount}`;
+      progressBar.style.width = `${(completedCount / totalCount) * 100}%`;
+
+      if (remainingCount === 0) {
+        remainingStatus.textContent = "All 37 Surahs completed! Click Restart to play again.";
+      } else if (remainingCount === 1) {
+        remainingStatus.textContent = "Only 1 mystery Surah left on the wheel!";
+      } else {
+        remainingStatus.textContent = `${remainingCount} mystery Surahs remaining on the wheel`;
+      }
+
+      const disableSpin = state.isSpinning || remainingCount === 0;
+      mainSpinBtn.disabled = disableSpin;
+      centerSpinBtn.disabled = disableSpin;
+
+      // Update Sound Button UI
+      if (state.soundEnabled) {
+        soundIconOn.classList.remove("hidden");
+        soundIconOff.classList.add("hidden");
+        soundLabel.textContent = "Sound On";
+      } else {
+        soundIconOn.classList.add("hidden");
+        soundIconOff.classList.remove("hidden");
+        soundLabel.textContent = "Muted";
+      }
+    }
+
+    function resetGame() {
+      state.eliminatedIds = [];
+      state.currentRotation = 0;
+      state.isSpinning = false;
+      state.selectedSurah = null;
+      saveProgress();
+      updateUIState();
+      drawWheel();
+    }
+
+    // Event Listeners for Controls
+    mainSpinBtn.addEventListener("click", spinWheel);
+    centerSpinBtn.addEventListener("click", spinWheel);
+
+    soundToggleBtn.addEventListener("click", () => {
+      state.soundEnabled = !state.soundEnabled;
+      saveProgress();
+      updateUIState();
+      if (state.soundEnabled) {
+        playTickSound();
+      }
+    });
+
+    // Restart Confirmation Modal Flow
+    restartBtn.addEventListener("click", () => {
+      if (state.isSpinning) return;
+      restartModal.classList.remove("hidden");
+      restartModal.classList.add("flex");
+    });
+
+    cancelRestartBtn.addEventListener("click", () => {
+      restartModal.classList.add("hidden");
+      restartModal.classList.remove("flex");
+    });
+
+    confirmRestartBtn.addEventListener("click", () => {
+      restartModal.classList.add("hidden");
+      restartModal.classList.remove("flex");
+      resetGame();
+    });
+
+    playAgainBtn.addEventListener("click", () => {
+      victoryModal.classList.add("hidden");
+      victoryModal.classList.remove("flex");
+      resetGame();
+    });
+
+    // Responsive Resize Handling
+    window.addEventListener("resize", () => {
+      resizeWheelCanvas();
+      resizeConfettiCanvas();
+    });
+
+    // Initialize Application on Window Load
+    window.onload = function () {
+      loadProgress();
+      updateUIState();
+      resizeWheelCanvas();
+      resizeConfettiCanvas();
+    };
+  </script>
+</body>
+</html>
